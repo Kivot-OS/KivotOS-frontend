@@ -177,7 +177,7 @@
       async function loadDirectory(path) {
         const cleanPath = path.replace(/\/\//g, "/").replace(/^\//, ""); // Clean up path
         const apiPath = cleanPath || "";
-        const apiUrl = `https://api.github.com/repos/${repo}/contents/${apiPath}`;
+        const apiUrl = `https://api.github.com/repos/${repo}/contents/${apiPath}?ref=gh-pages`;
 
         subtitle.textContent = `Browse repository${
           cleanPath ? `/${cleanPath}` : ""
