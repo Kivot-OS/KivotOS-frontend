@@ -1,0 +1,147 @@
+/* Aurora / Northern Lights Background Effect */
+
+/* Aurora container - covers full viewport */
+.aurora-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Aurora layers with gradient blobs */
+.aurora-layer {
+  position: absolute;
+  width: 150%;
+  height: 150%;
+  top: -25%;
+  left: -25%;
+  filter: blur(80px);
+  opacity: var(--aurora-opacity, 0.15);
+  mix-blend-mode: screen;
+}
+
+/* Layer 1 - Slow moving, primary color (mauve/purple) */
+.aurora-layer-1 {
+  background: 
+    radial-gradient(ellipse 80% 50% at 20% 40%, var(--aurora-primary, #cba6f7) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 60%, var(--aurora-secondary, #f5c2e7) 0%, transparent 50%);
+  animation: aurora-drift-1 25s ease-in-out infinite;
+}
+
+/* Layer 2 - Medium speed, secondary color (pink/coral) */
+.aurora-layer-2 {
+  background: 
+    radial-gradient(ellipse 70% 60% at 70% 30%, var(--aurora-secondary, #f5c2e7) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 70% at 30% 70%, var(--aurora-tertiary, #89b4fa) 0%, transparent 45%);
+  animation: aurora-drift-2 20s ease-in-out infinite;
+  animation-delay: -5s;
+}
+
+/* Layer 3 - Fast moving, tertiary color (blue/cyan) */
+.aurora-layer-3 {
+  background: 
+    radial-gradient(ellipse 60% 50% at 50% 50%, var(--aurora-tertiary, #89b4fa) 0%, transparent 50%),
+    radial-gradient(ellipse 40% 80% at 60% 20%, var(--aurora-primary, #cba6f7) 0%, transparent 40%);
+  animation: aurora-drift-3 15s ease-in-out infinite;
+  animation-delay: -10s;
+}
+
+/* Aurora wave animations */
+@keyframes aurora-drift-1 {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+  25% {
+    transform: translate(5%, 3%) rotate(3deg) scale(1.05);
+  }
+  50% {
+    transform: translate(-3%, 5%) rotate(-2deg) scale(0.95);
+  }
+  75% {
+    transform: translate(2%, -4%) rotate(2deg) scale(1.02);
+  }
+}
+
+@keyframes aurora-drift-2 {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+  33% {
+    transform: translate(-4%, 4%) rotate(-4deg) scale(1.08);
+  }
+  66% {
+    transform: translate(3%, -3%) rotate(3deg) scale(0.92);
+  }
+}
+
+@keyframes aurora-drift-3 {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+  20% {
+    transform: translate(3%, -5%) rotate(5deg) scale(1.1);
+  }
+  40% {
+    transform: translate(-5%, 2%) rotate(-3deg) scale(0.9);
+  }
+  60% {
+    transform: translate(4%, 4%) rotate(4deg) scale(1.05);
+  }
+  80% {
+    transform: translate(-2%, -3%) rotate(-2deg) scale(0.95);
+  }
+}
+
+/* Subtle grain overlay for texture */
+.aurora-grain {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+/* Light theme adjustments */
+[data-theme="light"] .aurora-layer {
+  opacity: 0.12;
+  mix-blend-mode: multiply;
+}
+
+[data-theme="light"] .aurora-layer-1 {
+  background: 
+    radial-gradient(ellipse 80% 50% at 20% 40%, var(--aurora-primary, #8839ef) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 60%, var(--aurora-secondary, #ea76cb) 0%, transparent 50%);
+}
+
+[data-theme="light"] .aurora-layer-2 {
+  background: 
+    radial-gradient(ellipse 70% 60% at 70% 30%, var(--aurora-secondary, #ea76cb) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 70% at 30% 70%, var(--aurora-tertiary, #1e66f5) 0%, transparent 45%);
+}
+
+[data-theme="light"] .aurora-layer-3 {
+  background: 
+    radial-gradient(ellipse 60% 50% at 50% 50%, var(--aurora-tertiary, #1e66f5) 0%, transparent 50%),
+    radial-gradient(ellipse 40% 80% at 60% 20%, var(--aurora-primary, #8839ef) 0%, transparent 40%);
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .aurora-layer {
+    animation: none;
+  }
+}
+
+/* Hide aurora on very small screens for performance */
+@media (max-width: 360px) {
+  .aurora-bg {
+    display: none;
+  }
+}

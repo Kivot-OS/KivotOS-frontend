@@ -40,5 +40,22 @@
   --accent: var(--ctp-mauve);
   --accent-hover: var(--ctp-pink);
   --success: var(--ctp-green);
+
+  /* RGB variants for transparency effects */
+  --bg-main-rgb: 30, 30, 46;
+  --bg-card-rgb: 24, 24, 37;
+  --accent-rgb: 203, 166, 247;
+  --text-primary-rgb: 205, 214, 244;
+
+  /* Transition & Animation Variables */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+
+  /* Aurora Background Variables */
+  --aurora-primary: var(--ctp-mauve);
+  --aurora-secondary: var(--ctp-pink);
+  --aurora-tertiary: var(--ctp-blue);
+  --aurora-opacity: 0.15;
 }
 

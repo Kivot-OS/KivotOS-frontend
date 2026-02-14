@@ -102,9 +102,36 @@ body {
     transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
+[data-theme="dark"] .theme-toggle {
+    background-color: var(--ctp-mauve);
+    border-color: var(--ctp-pink);
+}
+
 .theme-toggle:hover {
     background-color: var(--ctp-surface1);
     border-color: var(--ctp-surface2);
+}
+
+[data-theme="dark"] .theme-toggle:hover {
+    background-color: var(--ctp-pink);
+    border-color: var(--ctp-flamingo);
+}
+
+/* Prevent text selection except in code blocks */
+body {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+/* Allow selection in code blocks */
+.command-box code,
+table td code {
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
 }
 
 .theme-toggle img {
