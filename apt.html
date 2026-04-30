@@ -1,23 +1,16 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>KivotOS APT Repository</title>
+    <title>KivotOS APT Repository — Browse Files</title>
+    <meta name="description" content="Browse the KivotOS APT repository files and packages." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%238839ef'/%3E%3Ctext x='16' y='23' font-family='system-ui%2Csans-serif' font-weight='700' font-size='20' fill='white' text-anchor='middle'%3EK%3C/text%3E%3C/svg%3E" />
     <link rel="stylesheet" href="./styles/themes/catppuccin-latte.css" />
     <link rel="stylesheet" href="./styles/themes/catppuccin-mocha.css" />
     <link rel="stylesheet" href="./styles/apt.css" />
-    <link rel="stylesheet" href="./styles/aurora.css" />
   </head>
   <body>
-    <!-- Aurora Background Effect -->
-    <div class="aurora-bg" aria-hidden="true">
-      <div class="aurora-layer aurora-layer-1"></div>
-      <div class="aurora-layer aurora-layer-2"></div>
-      <div class="aurora-layer aurora-layer-3"></div>
-      <div class="aurora-grain"></div>
-    </div>
-
     <div class="container">
       <header class="header">
         <div class="header-content">
@@ -44,8 +37,8 @@
             <p class="subtitle">Browse packages in /apt/</p>
           </div>
         </div>
-        <button class="theme-toggle" id="themeToggle">
-          <img src="./assets/sun.svg" alt="Theme Toggle" />
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+          <img src="./assets/sun.svg" alt="" aria-hidden="true" />
         </button>
       </header>
 
@@ -62,7 +55,7 @@
               >
               <button
                 class="copy-btn"
-                onclick="copyCommand('repo-command', this)"
+                data-copy-id="repo-command"
               >
                 Copy
               </button>
@@ -85,7 +78,7 @@
             <tbody id="file-list">
               <tr>
                 <td>
-                  <span class="file-icon">📁</span>
+                  <i data-lucide="folder" class="file-icon"></i>
                   <a href="../" class="file-link">..</a>
                 </td>
                 <td class="hide-mobile">-</td>
@@ -102,6 +95,7 @@
       </main>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.488.0/dist/umd/lucide.min.js"></script>
     <script src="./assets/js/apt.js"></script>
   </body>
 </html>

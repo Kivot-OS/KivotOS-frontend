@@ -5,6 +5,7 @@
     flex-direction: column;
     margin-bottom: 0;
     max-height: 600px;
+    gap: var(--sp-4);
 }
 
 .quick-setup {
@@ -16,7 +17,7 @@
     max-height: 450px;
     height: auto;
     min-height: 120px;
-    margin-top: 0.5rem;
+    margin-top: var(--sp-2);
     margin-bottom: 0;
     overflow-y: auto;
 }
@@ -47,8 +48,8 @@
 .quick-setup h3 {
     font-size: clamp(1rem, 3vw, 1.125rem);
     font-weight: 600;
-    margin-top: 0.75rem;
-    margin-bottom: 0.4rem;
+    margin-top: var(--sp-3);
+    margin-bottom: var(--sp-1);
     color: var(--text-primary);
 }
 
@@ -84,7 +85,7 @@
 }
 
 .status-graph {
-    margin: 0.75rem 0;
+    margin: var(--sp-3) 0;
     text-align: center;
 }
 
@@ -94,7 +95,7 @@
 }
 
 .status-details {
-    margin-top: 0.75rem;
+    margin-top: var(--sp-3);
     text-align: center;
     color: var(--text-secondary);
 }

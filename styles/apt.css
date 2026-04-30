@@ -1,4 +1,16 @@
 /* General Setup */
+
+/* Focus visible — keyboard navigation */
+:focus-visible {
+    outline: 2px solid var(--ctp-mauve);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+[data-theme="light"] :focus-visible {
+    outline-color: var(--ctp-lavender);
+}
+
 :root {
     --primary-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     --mono-font: 'Fira Mono', monospace;
@@ -20,38 +32,31 @@ body {
 
 .container {
     max-width: 900px;
-    margin: 2rem auto;
-    padding: 0 1.5rem;
+    margin: var(--sp-8) auto;
+    padding: 0 var(--sp-6);
 }
 
 /* Header */
 .header {
     position: sticky;
-    top: 1rem;
+    top: var(--sp-4);
     z-index: 10;
     background-color: rgba(var(--ctp-mantle-rgb), 0.85);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    padding: 1.5rem;
-    border-radius: 12px;
+    padding: var(--sp-6);
+    border-radius: var(--radius-lg);
     border: 1px solid var(--ctp-surface0);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
-    /* The sticky header is inside the container, so it needs to be positioned relative to it */
-}
-
-.container {
-    max-width: 900px;
-    margin: 2rem auto;
-    padding: 0 1.5rem;
+    margin-bottom: var(--sp-8);
 }
 
 .header-content {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: var(--sp-4);
 }
 
 .back-link {
@@ -92,7 +97,7 @@ body {
 .theme-toggle {
     background-color: var(--ctp-surface0);
     border: 1px solid var(--ctp-surface1);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     width: 40px;
     height: 40px;
     cursor: pointer;
@@ -147,13 +152,13 @@ table td code {
 .card {
     background-color: var(--ctp-mantle);
     border: 1px solid var(--ctp-surface0);
-    border-radius: 12px;
-    margin-bottom: 2rem;
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--sp-8);
     overflow: hidden;
 }
 
 .card-header {
-    padding: 1rem 1.5rem;
+    padding: var(--sp-4) var(--sp-6);
     border-bottom: 1px solid var(--ctp-surface0);
 }
 
@@ -164,15 +169,15 @@ table td code {
 }
 
 .card-content {
-    padding: 1.5rem;
+    padding: var(--sp-6);
 }
 
 /* Command Box */
 .command-box {
     background-color: var(--ctp-crust);
     border: 1px solid var(--ctp-surface0);
-    border-radius: 8px;
-    padding: 1rem;
+    border-radius: var(--radius-md);
+    padding: var(--sp-4);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -196,13 +201,13 @@ table td code {
     background-color: var(--accent);
     color: var(--bg-main);
     border: none;
-    border-radius: 6px;
-    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-sm);
+    padding: var(--sp-2) var(--sp-3);
     cursor: pointer;
     font-size: 0.8rem;
     font-family: 'Fira Mono', monospace;
     font-weight: 600;
-    margin-left: 1rem;
+    margin-left: var(--sp-4);
     transition: background-color 0.2s ease;
 }
 
@@ -224,7 +229,7 @@ table td code {
 
 .file-listing th,
 .file-listing td {
-    padding: 1rem 1.5rem;
+    padding: var(--sp-4) var(--sp-6);
     text-align: left;
     border-bottom: 1px solid var(--ctp-surface0);
 }
@@ -249,8 +254,13 @@ table td code {
 }
 
 .file-icon {
-    margin-right: 0.75rem;
+    margin-right: var(--sp-3);
     color: var(--ctp-overlay1);
+    width: var(--icon-md);
+    height: var(--icon-md);
+    vertical-align: middle;
+    display: inline-flex;
+    align-items: center;
 }
 
 .file-link {
@@ -281,19 +291,19 @@ table td code {
 /* Responsive Design */
 @media (max-width: 768px) {
     .container {
-        margin: 1rem auto;
-        padding: 0 1rem;
+        margin: var(--sp-4) auto;
+        padding: 0 var(--sp-4);
     }
 
     .header {
         flex-direction: column;
         align-items: flex-start;
-        padding: 1rem;
+        padding: var(--sp-4);
     }
 
     .theme-toggle {
         position: static;
-        margin-top: 1rem;
+        margin-top: var(--sp-4);
     }
 
     .command-box {
@@ -302,13 +312,13 @@ table td code {
     }
 
     .copy-btn {
-        margin-top: 0.75rem;
+        margin-top: var(--sp-3);
         margin-left: 0;
     }
 
     .file-listing th,
     .file-listing td {
-        padding: 0.75rem 1rem;
+        padding: var(--sp-3) var(--sp-4);
     }
 
     .file-listing .hide-mobile {

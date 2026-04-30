@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>KivotOS APT Repository</title>
+    <meta name="description" content="KivotOS custom APT repository — browse and install packages for KivotOS distribution." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%238839ef'/%3E%3Ctext x='16' y='23' font-family='system-ui%2Csans-serif' font-weight='700' font-size='20' fill='white' text-anchor='middle'%3EK%3C/text%3E%3C/svg%3E" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -15,22 +17,13 @@
     <link rel="stylesheet" href="styles/base.css" />
     <link rel="stylesheet" href="styles/components.css" />
     <link rel="stylesheet" href="styles/page.css" />
-    <link rel="stylesheet" href="styles/aurora.css" />
   </head>
   <body>
-    <!-- Aurora Background Effect -->
-    <div class="aurora-bg" aria-hidden="true">
-      <div class="aurora-layer aurora-layer-1"></div>
-      <div class="aurora-layer aurora-layer-2"></div>
-      <div class="aurora-layer aurora-layer-3"></div>
-      <div class="aurora-grain"></div>
-    </div>
-
     <div class="header">
       <div class="container">
-        <h1>🗂️ KivotOS Repository</h1>
+        <h1>KivotOS Repository</h1>
         <p class="tagline">Custom APT packages for KivotOS distribution</p>
-        <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">
           <span class="theme-toggle-slider"></span>
         </button>
       </div>
@@ -41,14 +34,14 @@
       <div class="dashboard-row primary">
         <div class="dashboard-col-2">
           <div class="card quick-setup">
-            <h2><span class="icon">⚡</span> Quick Setup</h2>
+            <h2><i data-lucide="zap" class="icon"></i> Quick Setup</h2>
             <p>Add KivotOS repository to your Debian/Ubuntu system:</p>
 
             <h3>1. Import repo key</h3>
             <div class="code-block">
               <pre><code id="cmd1">curl -fsSL https://kivot-os.github.io/KivotOS-repo/pubkey.gpg \
 | sudo gpg --dearmor -o /usr/share/keyrings/kivotos.gpg</code></pre>
-              <button class="copy-btn" onclick="copyCommand('cmd1', this)">
+              <button class="copy-btn" data-copy-id="cmd1">
                 Copy
               </button>
             </div>
@@ -58,7 +51,7 @@
               <pre><code id="cmd2">echo "deb [arch=amd64 signed-by=/usr/share/keyrings/kivotos.gpg] \
 https://kivot-os.github.io/KivotOS-repo/ trixie main" \
 | sudo tee /etc/apt/sources.list.d/kivotos.list</code></pre>
-              <button class="copy-btn" onclick="copyCommand('cmd2', this)">
+              <button class="copy-btn" data-copy-id="cmd2">
                 Copy
               </button>
             </div>
@@ -67,7 +60,7 @@ https://kivot-os.github.io/KivotOS-repo/ trixie main" \
             <div class="code-block">
               <pre><code id="cmd3">sudo apt update
 sudo apt install</code></pre>
-              <button class="copy-btn" onclick="copyCommand('cmd3', this)">
+              <button class="copy-btn" data-copy-id="cmd3">
                 Copy
               </button>
             </div>
@@ -76,7 +69,7 @@ sudo apt install</code></pre>
 
         <div class="dashboard-col-1">
           <div class="card package-card">
-            <h2><span class="icon">📦</span> Available Packages</h2>
+            <h2><i data-lucide="package" class="icon"></i> Available Packages</h2>
             <div class="package-grid" id="package-grid">
               <div class="loading-message">Loading available packages...</div>
             </div>
@@ -89,11 +82,14 @@ sudo apt install</code></pre>
       <div class="dashboard-row">
         <div class="dashboard-col-1">
           <div class="card">
-            <h2><span class="icon">📊</span> Repository Status</h2>
+            <h2><i data-lucide="activity" class="icon"></i> Repository Status</h2>
             <div class="status-graph">
               <img
                 src="https://raw.githubusercontent.com/Kivot-OS/KivotOS-status/refs/heads/master/graphs/kivot-os-apt-repository/response-time.png"
                 alt="KivotOS Repository Response Time Graph"
+                width="600"
+                height="200"
+                loading="lazy"
               />
             </div>
             <div class="status-details">
@@ -109,7 +105,7 @@ sudo apt install</code></pre>
             <div class="cta">
               <a
                 href="https://kivot-os.github.io/KivotOS-status/"
-                style="color: var(--accent); text-decoration: none"
+                class="card-link"
                 >View Full Status Page →</a
               >
             </div>
@@ -118,42 +114,29 @@ sudo apt install</code></pre>
 
         <div class="dashboard-col-1">
           <div class="card">
-            <h2><span class="icon">🔗</span> Resources</h2>
-            <ul style="list-style: none; padding: 0">
-              <li style="margin: 0.75rem 0">
+            <h2><i data-lucide="link" class="icon"></i> Resources</h2>
+            <ul class="resource-list">
+              <li>
                 <a
                   href="https://github.com/Kivot-OS/KivotOS-repo"
-                  style="color: var(--accent); text-decoration: none"
-                >
-                  → GitHub Repository
-                </a>
+                  class="card-link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >→ GitHub Repository</a>
               </li>
-              <li style="margin: 0.75rem 0">
-                <a
-                  href="./apt/"
-                  style="color: var(--accent); text-decoration: none"
-                >
-                  → Browse repository
-                </a>
+              <li>
+                <a href="./apt/" class="card-link">→ Browse repository</a>
               </li>
-              <li style="margin: 0.75rem 0">
-                <a
-                  href="./pubkey.gpg"
-                  style="color: var(--accent); text-decoration: none"
-                >
-                  → Download GPG Public Key
-                </a>
+              <li>
+                <a href="./pubkey.gpg" class="card-link">→ Download GPG Public Key</a>
               </li>
-              <li style="margin: 0.75rem 0">
+              <li>
                 <a
                   href="https://github.com/Kivot-OS/KivotOS-repo/actions?query=workflow%3A%22apt-packages%22"
-                  style="color: var(--accent); text-decoration: none"
-                >
-                  → Build:
-                  <span id="build-status" style="font-weight: 500"
-                    >Loading...</span
-                  >
-                </a>
+                  class="card-link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >→ Build: <span id="build-status" class="build-status-text">Loading...</span></a>
               </li>
             </ul>
           </div>
@@ -162,12 +145,10 @@ sudo apt install</code></pre>
     </div>
 
     <div class="footer">
-      <p>
-        KivotOS Repository · Powered by
-        <a href="https://pages.github.com">GitHub Pages</a>
-      </p>
+      <p>KivotOS Repository &copy; <span id="footer-year"></span> KivotOS. All rights reserved.</p>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.488.0/dist/umd/lucide.min.js"></script>
     <script src="assets/js/main.js"></script>
   </body>
 </html>

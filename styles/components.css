@@ -1,8 +1,44 @@
 /* Component Styles */
+
+/* Focus visible — keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Generic card link (replaces inline style="color: var(--accent); text-decoration: none") */
+.card-link {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.card-link:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+}
+
+/* Resource list (replaces inline style on ul/li in Resources card) */
+.resource-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 0.5rem;
+}
+
+.resource-list li {
+  margin: 0.75rem 0;
+}
+
+/* Build status inline text */
+.build-status-text {
+  font-weight: 500;
+}
+
 .header {
   position: sticky;
   top: 0;
-  padding: clamp(0.75rem, 2vw, 1rem) 0;
+  padding: clamp(var(--sp-3), 2vw, var(--sp-4)) 0;
   background-color: rgba(var(--ctp-mantle-rgb), 0.85);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -13,11 +49,11 @@
 .theme-toggle {
   position: absolute;
   top: 50%;
-  right: clamp(1rem, 3vw, 1.5rem);
+  right: clamp(var(--sp-4), 3vw, var(--sp-6));
   transform: translateY(-50%);
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 50px;
+  border-radius: var(--radius-full);
   padding: 2px;
   cursor: pointer;
   transition: background-color 0.2s ease;
@@ -78,8 +114,8 @@ body {
 
 .card {
   background-color: var(--bg-card);
-  border-radius: 12px;
-  padding: clamp(1.5rem, 4vw, 2rem);
+  border-radius: var(--radius-lg);
+  padding: clamp(var(--sp-6), 4vw, var(--sp-8));
   border: 1px solid var(--border-color);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   height: fit-content;
@@ -94,26 +130,31 @@ body {
 
 .card h2 {
   color: var(--accent);
-  margin-bottom: clamp(1rem, 3vw, 1.5rem);
+  margin-bottom: clamp(var(--sp-4), 3vw, var(--sp-6));
   display: flex;
   align-items: center;
-  gap: clamp(0.5rem, 2vw, 0.75rem);
+  gap: clamp(var(--sp-2), 2vw, var(--sp-3));
   font-size: clamp(1.25rem, 4vw, 1.5rem);
   font-weight: 600;
 }
 
-.icon { font-size: 1.75rem; }
+.icon {
+  width: var(--icon-lg);
+  height: var(--icon-lg);
+  flex-shrink: 0;
+  stroke-width: 2;
+}
 
 .code-block {
   position: relative;
-  margin: 1rem 0;
+  margin: var(--sp-4) 0;
 }
 
 pre {
   background-color: var(--code-bg);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: clamp(1rem, 3vw, 1.25rem);
+  border-radius: var(--radius-md);
+  padding: clamp(var(--sp-4), 3vw, var(--sp-5));
   overflow-x: auto;
   font-size: clamp(0.8rem, 2.5vw, 0.9rem);
   line-height: 1.5;
@@ -123,13 +164,13 @@ pre {
 
 .copy-btn {
   position: absolute;
-  top: clamp(0.5rem, 2vw, 0.75rem);
-  right: clamp(0.5rem, 2vw, 0.75rem);
+  top: clamp(var(--sp-2), 2vw, var(--sp-3));
+  right: clamp(var(--sp-2), 2vw, var(--sp-3));
   background-color: var(--accent);
   color: var(--bg-main);
   border: none;
-  border-radius: 6px;
-  padding: clamp(0.25rem, 1vw, 0.35rem) clamp(0.5rem, 2vw, 0.75rem);
+  border-radius: var(--radius-sm);
+  padding: clamp(var(--sp-1), 1vw, 5px) clamp(var(--sp-2), 2vw, var(--sp-3));
   cursor: pointer;
   font-size: clamp(0.7rem, 2vw, 0.8rem);
   font-family: 'Fira Mono', monospace;
@@ -150,11 +191,11 @@ code {
 
 .package-grid {
   display: grid;
-  gap: 1rem;
-  margin-top: 1.5rem;
+  gap: var(--sp-4);
+  margin-top: var(--sp-6);
   max-height: 400px;
   overflow-y: auto;
-  padding-right: 0.5rem;
+  padding-right: var(--sp-2);
 }
 
 /* Custom scrollbar for package grid */
@@ -184,15 +225,15 @@ code {
 
 .package-item {
   background-color: var(--code-bg);
-  padding: clamp(0.75rem, 3vw, 1rem) clamp(1rem, 3vw, 1.25rem);
-  border-radius: 8px;
+  padding: clamp(var(--sp-3), 3vw, var(--sp-4)) clamp(var(--sp-4), 3vw, var(--sp-5));
+  border-radius: var(--radius-md);
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   border: 1px solid var(--border-color);
   transition: transform 0.2s ease, border-color 0.2s ease;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--sp-2);
 }
 
 .package-item:hover {
@@ -213,10 +254,10 @@ code {
 
 .version-badge {
   display: inline-block;
-  padding: 0.25rem 0.5rem;
+  padding: var(--sp-1) var(--sp-2);
   background-color: var(--accent);
   color: var(--bg-main);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 0.75rem;
   font-weight: 600;
   font-family: 'Fira Mono', monospace;
@@ -227,10 +268,10 @@ code {
   display: inline-block;
   background-color: var(--accent);
   color: var(--bg-main);
-  padding: clamp(0.75rem, 2vw, 0.75rem) clamp(1rem, 4vw, 1.5rem);
-  border-radius: 8px;
+  padding: var(--sp-3) clamp(var(--sp-4), 4vw, var(--sp-6));
+  border-radius: var(--radius-md);
   text-decoration: none;
-  margin-top: clamp(1rem, 3vw, 1.5rem);
+  margin-top: clamp(var(--sp-4), 3vw, var(--sp-6));
   transition: background-color 0.3s ease, transform 0.2s ease;
   font-weight: 600;
   font-size: clamp(0.9rem, 2.5vw, 1rem);

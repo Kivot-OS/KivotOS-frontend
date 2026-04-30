@@ -14,36 +14,59 @@ themeToggle.addEventListener("click", () => {
 
   html.setAttribute("data-theme", newTheme);
   localStorage.setItem("theme", newTheme);
-
-  updateStatusColors();
 });
 
-// Copy command function
-function copyCommand(id, button) {
-  const code = document.getElementById(id);
-  const text = code.textContent;
-
-  navigator.clipboard.writeText(text).then(() => {
-    button.textContent = "Copied!";
-    button.classList.add("copied");
-
-    setTimeout(() => {
-      button.textContent = "Copy";
-      button.classList.remove("copied");
-    }, 2000);
+// Clipboard helper — works in HTTPS, http, and file:// contexts
+function copyToClipboard(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    return navigator.clipboard.writeText(text);
+  }
+  return new Promise((resolve, reject) => {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.cssText = "position:fixed;top:0;left:0;opacity:0;pointer-events:none";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {
+      document.execCommand("copy") ? resolve() : reject();
+    } catch (e) {
+      reject(e);
+    } finally {
+      document.body.removeChild(ta);
+    }
   });
 }
 
-function updateStatusColors() {
+// Copy command function — wired via data-copy-id attribute
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest(".copy-btn[data-copy-id]");
+  if (!btn) return;
+  const code = document.getElementById(btn.dataset.copyId);
+  if (!code) return;
+  const text = code.textContent.trim();
+
+  copyToClipboard(text).then(() => {
+    btn.textContent = "Copied!";
+    btn.classList.add("copied");
+    setTimeout(() => {
+      btn.textContent = "Copy";
+      btn.classList.remove("copied");
+    }, 2000);
+  }).catch(() => {
+    btn.textContent = "Failed";
+    setTimeout(() => { btn.textContent = "Copy"; }, 2000);
+  });
+});
+
+function fetchAndDisplayStatus() {
   const uptimeUrl =
     "https://raw.githubusercontent.com/Kivot-OS/KivotOS-status/master/api/kivot-os-apt-repository/uptime.json";
   const responseTimeUrl =
     "https://raw.githubusercontent.com/Kivot-OS/KivotOS-status/master/api/kivot-os-apt-repository/response-time.json";
 
   const uptimeElement = document.getElementById("uptime-status");
-  const responseTimeElement = document.getElementById(
-    "response-time-status"
-  );
+  const responseTimeElement = document.getElementById("response-time-status");
 
   fetch(uptimeUrl)
     .then((response) => response.json())
@@ -72,7 +95,7 @@ function updateStatusColors() {
     });
 }
 
-updateStatusColors();
+fetchAndDisplayStatus();
 
 // Format time helper
 function formatBuildTime(dateString) {
@@ -275,12 +298,16 @@ async function updatePackageList() {
   
   try {
     const apiUrl = "https://api.github.com/repos/Kivot-OS/KivotOS-repo/contents/packages?ref=main";
-    const response = await fetch(apiUrl, {
-      headers: {
-        Accept: "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-      },
-    });
+    const ghHeaders = {
+      Accept: "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+    };
+
+    const [response, lockResponse] = await Promise.all([
+      fetch(apiUrl, { headers: ghHeaders }),
+      fetch("https://raw.githubusercontent.com/Kivot-OS/KivotOS-repo/main/packages.lock")
+        .catch(() => null),
+    ]);
 
     if (!response.ok) {
       throw new Error(`GitHub API error: ${response.status}`);
@@ -288,7 +315,7 @@ async function updatePackageList() {
 
     const files = await response.json();
     const tomlFiles = files.filter(f => f.name.endsWith('.toml'));
-    
+
     if (tomlFiles.length === 0) {
       container.innerHTML = '<div class="loading-message">No packages found</div>';
       return;
@@ -296,15 +323,12 @@ async function updatePackageList() {
 
     let lockVersions = {};
     try {
-      const lockResponse = await fetch(
-        "https://raw.githubusercontent.com/Kivot-OS/KivotOS-repo/main/packages.lock"
-      );
-      if (lockResponse.ok) {
+      if (lockResponse && lockResponse.ok) {
         const lockContent = await lockResponse.text();
         lockVersions = parsePackagesLock(lockContent);
       }
     } catch (e) {
-      console.warn("Could not fetch packages.lock:", e);
+      console.warn("Could not parse packages.lock:", e);
     }
 
     const packagePromises = tomlFiles.map(async (file) => {
@@ -321,8 +345,6 @@ async function updatePackageList() {
     });
 
     const packages = (await Promise.all(packagePromises)).filter(p => p !== null);
-    
-    window.availablePackages = packages;
 
     container.innerHTML = "";
 
@@ -338,28 +360,49 @@ async function updatePackageList() {
       const description = pkg.description || 'No description';
       const pkgType = pkg.type || 'unknown';
       const homepage = pkg.homepage || '#';
-      
       const version = lockVersions[name] || (pkg.version === 'latest' ? 'latest' : pkg.version || 'latest');
 
       const item = document.createElement("div");
       item.className = "package-item";
-      item.innerHTML = `
-        <div>
-          <div class="package-name">${name}</div>
-          <div class="package-desc">${description}</div>
-        </div>
-        <span class="version-badge" title="Type: ${pkgType}">${version}</span>
-      `;
+
+      const infoDiv = document.createElement("div");
+
+      const nameDiv = document.createElement("div");
+      nameDiv.className = "package-name";
+      nameDiv.textContent = name;
+
+      const descDiv = document.createElement("div");
+      descDiv.className = "package-desc";
+      descDiv.textContent = description;
+
+      const badge = document.createElement("span");
+      badge.className = "version-badge";
+      badge.title = `Type: ${pkgType}`;
+      badge.textContent = version;
+
+      infoDiv.appendChild(nameDiv);
+      infoDiv.appendChild(descDiv);
+      item.appendChild(infoDiv);
+      item.appendChild(badge);
 
       if (homepage !== '#') {
         item.style.cursor = "pointer";
-        item.onclick = () => window.open(homepage, "_blank");
+        item.addEventListener("click", () => {
+          const a = document.createElement("a");
+          a.href = homepage;
+          a.rel = "noopener noreferrer";
+          a.target = "_blank";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        });
       }
 
       container.appendChild(item);
     });
 
     updateInstallCommand(packages);
+    if (window.lucide) lucide.createIcons();
 
   } catch (error) {
     console.error("Error fetching packages:", error);
@@ -380,6 +423,11 @@ function updateInstallCommand(packages) {
   }
 }
 
+// Footer year
+const yearEl = document.getElementById("footer-year");
+if (yearEl) yearEl.textContent = new Date().getFullYear();
+
 // Initialize
+if (window.lucide) lucide.createIcons();
 updateBuildStatus();
 updatePackageList();

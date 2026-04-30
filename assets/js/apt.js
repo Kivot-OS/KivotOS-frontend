@@ -21,21 +21,48 @@ function updateThemeIcon() {
 
 updateThemeIcon();
 
-// Copy command function
-function copyCommand(id, button) {
-  const code = document.getElementById(id);
-  const text = code.textContent;
-
-  navigator.clipboard.writeText(text).then(() => {
-    button.textContent = "Copied!";
-    button.classList.add("copied");
-
-    setTimeout(() => {
-      button.textContent = "Copy";
-      button.classList.remove("copied");
-    }, 2000);
+// Clipboard helper — works in HTTPS, http, and file:// contexts
+function copyToClipboard(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    return navigator.clipboard.writeText(text);
+  }
+  return new Promise((resolve, reject) => {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.cssText = "position:fixed;top:0;left:0;opacity:0;pointer-events:none";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {
+      document.execCommand("copy") ? resolve() : reject();
+    } catch (e) {
+      reject(e);
+    } finally {
+      document.body.removeChild(ta);
+    }
   });
 }
+
+// Copy command function — wired via data-copy-id attribute
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest(".copy-btn[data-copy-id]");
+  if (!btn) return;
+  const code = document.getElementById(btn.dataset.copyId);
+  if (!code) return;
+  const text = code.textContent.trim();
+
+  copyToClipboard(text).then(() => {
+    btn.textContent = "Copied!";
+    btn.classList.add("copied");
+    setTimeout(() => {
+      btn.textContent = "Copy";
+      btn.classList.remove("copied");
+    }, 2000);
+  }).catch(() => {
+    btn.textContent = "Failed";
+    setTimeout(() => { btn.textContent = "Copy"; }, 2000);
+  });
+});
 
 // Dynamic file listing via GitHub API with rate limiting
 const fileListBody = document.getElementById("file-list");
@@ -134,10 +161,21 @@ async function loadDirectory(path) {
     displayDirectory(items, cleanPath, path);
   } catch (error) {
     console.error("Failed to load directory:", error);
-    fileListBody.innerHTML = `<tr><td colspan="3" class="loading-message">${
-      error.message || "Failed to load repository contents."
-    }</td></tr>`;
+    const errRow = document.createElement("tr");
+    const errTd = document.createElement("td");
+    errTd.colSpan = 3;
+    errTd.className = "loading-message";
+    errTd.textContent = error.message || "Failed to load repository contents.";
+    errRow.appendChild(errTd);
+    fileListBody.innerHTML = "";
+    fileListBody.appendChild(errRow);
   }
+}
+
+function makeCell(className) {
+  const td = document.createElement("td");
+  if (className) td.className = className;
+  return td;
 }
 
 function displayDirectory(items, cleanPath, path) {
@@ -145,18 +183,26 @@ function displayDirectory(items, cleanPath, path) {
 
   // Parent directory link - only show if we're not at root
   if (cleanPath) {
-    // Go up one level
     const lastSlashIndex = cleanPath.lastIndexOf("/");
     const parentPath = lastSlashIndex >= 0 ? cleanPath.substring(0, lastSlashIndex) : "/";
     const parentRow = document.createElement("tr");
-    parentRow.innerHTML = `
-            <td>
-                <span class="file-icon">📁</span>
-                <a href="${parentPath === "" ? "/" : parentPath + "/"}" class="file-link parent-link">..</a>
-            </td>
-            <td class="hide-mobile">-</td>
-            <td class="hide-mobile">-</td>
-        `;
+
+    const td1 = makeCell(null);
+    const icon = document.createElement("i");
+    icon.setAttribute("data-lucide", "folder");
+    icon.className = "file-icon";
+    const link = document.createElement("a");
+    link.href = parentPath === "" ? "/" : parentPath + "/";
+    link.className = "file-link parent-link";
+    link.textContent = "..";
+    td1.appendChild(icon);
+    td1.appendChild(link);
+
+    const td2 = makeCell("hide-mobile"); td2.textContent = "-";
+    const td3 = makeCell("hide-mobile"); td3.textContent = "-";
+    parentRow.appendChild(td1);
+    parentRow.appendChild(td2);
+    parentRow.appendChild(td3);
     fileListBody.appendChild(parentRow);
   }
 
@@ -172,23 +218,32 @@ function displayDirectory(items, cleanPath, path) {
 
   items.forEach((item) => {
     const isDirectory = item.type === "dir";
-    // Build the path for navigation
     const itemPath = isDirectory
       ? `${cleanPath ? cleanPath + "/" : ""}${item.name}/`
       : item.download_url;
+
     const row = document.createElement("tr");
-    row.innerHTML = `
-            <td>
-                <span class="file-icon">${
-                  isDirectory ? "📁" : "📄"
-                }</span>
-                <a href="${itemPath}" class="file-link">${item.name}</a>
-            </td>
-            <td class="hide-mobile">-</td>
-            <td class="hide-mobile">-</td>
-        `;
+
+    const td1 = makeCell(null);
+    const icon = document.createElement("i");
+    icon.setAttribute("data-lucide", isDirectory ? "folder" : "file");
+    icon.className = "file-icon";
+    const link = document.createElement("a");
+    link.href = itemPath;
+    link.className = "file-link";
+    link.textContent = item.name;
+    td1.appendChild(icon);
+    td1.appendChild(link);
+
+    const td2 = makeCell("hide-mobile"); td2.textContent = "-";
+    const td3 = makeCell("hide-mobile"); td3.textContent = "-";
+    row.appendChild(td1);
+    row.appendChild(td2);
+    row.appendChild(td3);
     fileListBody.appendChild(row);
   });
+
+  if (window.lucide) lucide.createIcons();
 }
 
 // Handle clicks to navigate
@@ -215,6 +270,7 @@ window.addEventListener("popstate", (e) => {
 });
 
 // Initial load
+if (window.lucide) lucide.createIcons();
 const initialPath =
   new URLSearchParams(window.location.search).get("path") || "/";
 history.replaceState({ path: initialPath }, "", `?path=${initialPath}`);
