@@ -384,9 +384,9 @@ async function updatePackageList() {
     }
 
     const files = await response.json();
-    const tomlFiles = files.filter(f => f.name.endsWith('.toml'));
+    const pkgDirs = files.filter(f => f.type === "dir");
 
-    if (tomlFiles.length === 0) {
+    if (pkgDirs.length === 0) {
       container.innerHTML = '<div class="loading-message">No packages found</div>';
       return;
     }
@@ -401,15 +401,16 @@ async function updatePackageList() {
       console.warn("Could not parse packages.lock:", e);
     }
 
-    const packagePromises = tomlFiles.map(async (file) => {
+    const packagePromises = pkgDirs.map(async (dir) => {
       try {
-        const tomlResponse = await fetch(file.download_url);
+        const rawUrl = `https://raw.githubusercontent.com/Kivot-OS/KivotOS-repo/main/packages/${dir.name}/package.toml`;
+        const tomlResponse = await fetch(rawUrl);
         if (!tomlResponse.ok) return null;
         const tomlContent = await tomlResponse.text();
         const pkg = parseTOML(tomlContent);
         return pkg;
       } catch (e) {
-        console.error(`Failed to parse ${file.name}:`, e);
+        console.error(`Failed to parse ${dir.name}/package.toml:`, e);
         return null;
       }
     });
