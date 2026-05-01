@@ -128,10 +128,6 @@ async function renderIndex(env: Env, prefix: string): Promise<Response> {
 <hr>
 <div class="footer">
   KivotOS APT Repository — served by Cloudflare Workers + R2<br>
-  Add this repo:
-  <pre><code>curl -fsSL ${"${URL}"}/pubkey.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/kivotos.gpg
-echo "deb [signed-by=/etc/apt/keyrings/kivotos.gpg] ${"${URL}"} trixie main" | sudo tee /etc/apt/sources.list.d/kivotos.list
-sudo apt update</code></pre>
 </div>
 </body>
 </html>`;
