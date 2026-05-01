@@ -39,7 +39,7 @@
 
             <h3>1. Import repo key</h3>
             <div class="code-block">
-              <pre><code id="cmd1">curl -fsSL https://kivot-os.github.io/KivotOS-repo/pubkey.gpg \
+              <pre><code id="cmd1">curl -fsSL https://kivotos-repo.dungdinhmanh0209.workers.dev/pubkey.gpg \
 | sudo gpg --dearmor -o /usr/share/keyrings/kivotos.gpg</code></pre>
               <button class="copy-btn" data-copy-id="cmd1">
                 Copy
@@ -49,7 +49,7 @@
             <h3>2. Add sources list (trixie/main)</h3>
             <div class="code-block">
               <pre><code id="cmd2">echo "deb [arch=amd64 signed-by=/usr/share/keyrings/kivotos.gpg] \
-https://kivot-os.github.io/KivotOS-repo/ trixie main" \
+https://kivotos-repo.dungdinhmanh0209.workers.dev/ trixie main" \
 | sudo tee /etc/apt/sources.list.d/kivotos.list</code></pre>
               <button class="copy-btn" data-copy-id="cmd2">
                 Copy
@@ -82,31 +82,27 @@ sudo apt install</code></pre>
       <div class="dashboard-row">
         <div class="dashboard-col-1">
           <div class="card">
-            <h2><i data-lucide="activity" class="icon"></i> Repository Status</h2>
-            <div class="status-graph">
-              <img
-                src="https://raw.githubusercontent.com/Kivot-OS/KivotOS-status/refs/heads/master/graphs/kivot-os-apt-repository/response-time.png"
-                alt="KivotOS Repository Response Time Graph"
-                width="600"
-                height="200"
-                loading="lazy"
-              />
+            <h2><i data-lucide="bar-chart-2" class="icon"></i> Build History</h2>
+            <div class="build-chart" id="build-chart">
+              <div class="loading-message">Loading build history...</div>
             </div>
             <div class="status-details">
               <p>
-                <strong>Overall uptime:</strong>
-                <span id="uptime-status">Loading...</span>
+                <strong>Build success rate:</strong>
+                <span id="build-success-rate">Loading...</span>
               </p>
               <p>
-                <strong>Average response time:</strong>
-                <span id="response-time-status">Loading...</span>
+                <strong>Avg build time:</strong>
+                <span id="avg-build-time">Loading...</span>
               </p>
             </div>
             <div class="cta">
               <a
-                href="https://kivot-os.github.io/KivotOS-status/"
+                href="https://github.com/Kivot-OS/KivotOS-repo/actions/workflows/build.yml"
                 class="card-link"
-                >View Full Status Page →</a
+                target="_blank"
+                rel="noopener noreferrer"
+                >View All Builds →</a
               >
             </div>
           </div>

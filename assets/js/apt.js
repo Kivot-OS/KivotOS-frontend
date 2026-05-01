@@ -64,14 +64,13 @@ document.addEventListener("click", (e) => {
   });
 });
 
-// Dynamic file listing via GitHub API with rate limiting
+// Dynamic file listing via Cloudflare Worker
 const fileListBody = document.getElementById("file-list");
 const subtitle = document.querySelector(".subtitle");
-const repo = "Kivot-OS/KivotOS-repo";
-const BRANCH = "gh-pages"; // GitHub Pages branch where apt files are served from
+const WORKER_BASE = "https://kivotos-repo.dungdinhmanh0209.workers.dev";
 
-// Cache management for API rate limiting
-const CACHE_KEY = "kivotos_api_cache";
+// Cache management
+const CACHE_KEY = "kivotos_worker_cache";
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache
 
 function getCache(path) {
@@ -105,60 +104,35 @@ function setCache(path, data) {
   }
 }
 
+function formatFileSize(bytes) {
+  if (bytes == null) return "-";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1073741824) return `${(bytes / 1048576).toFixed(1)} MB`;
+  return `${(bytes / 1073741824).toFixed(2)} GB`;
+}
+
 async function loadDirectory(path) {
-  // Normalize path: remove leading/trailing slashes, fix double slashes
   const cleanPath = path.replace(/\/+/g, "/").replace(/^\//, "").replace(/\/$/, "");
-  
-  // API path is the same as cleanPath (files are at root of gh-pages branch)
-  const apiPath = cleanPath;
-  const apiUrl = `https://api.github.com/repos/${repo}/contents/${apiPath}?ref=${BRANCH}`;
+  const prefix = cleanPath ? `${cleanPath}/` : "";
+  const apiUrl = `${WORKER_BASE}/${prefix}?format=json`;
 
-  subtitle.textContent = `Browse repository${cleanPath ? `/${cleanPath}` : ""}`;
+  subtitle.textContent = `Browse repository${cleanPath ? ` / ${cleanPath}` : ""}`;
 
-  // Check cache first
-  const cachedData = getCache(apiPath);
-  if (cachedData) {
-    displayDirectory(cachedData, cleanPath, path);
+  const cached = getCache(prefix);
+  if (cached) {
+    displayDirectory(cached, cleanPath);
     return;
   }
 
   fileListBody.innerHTML = `<tr><td colspan="3" class="loading-message">Loading repository contents...</td></tr>`;
 
   try {
-    const response = await fetch(apiUrl, {
-      headers: {
-        Accept: "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-      },
-    });
-
-    // Check rate limit
-    const remaining = response.headers.get("x-ratelimit-remaining");
-    const limit = response.headers.get("x-ratelimit-limit");
-    if (remaining) {
-      console.log(
-        `GitHub API rate limit: ${remaining}/${limit} requests remaining`
-      );
-      if (parseInt(remaining) < 10) {
-        console.warn(
-          "Low on API rate limit! Consider waiting before more requests."
-        );
-      }
-    }
-    if (!response.ok) {
-      if (response.status === 403) {
-        throw new Error(
-          "GitHub API rate limit exceeded. Please wait a moment and try again."
-        );
-      }
-      throw new Error(`GitHub API error: ${response.status}`);
-    }
-    const items = await response.json();
-
-    // Cache the data using apiPath as key
-    setCache(apiPath, items);
-
-    displayDirectory(items, cleanPath, path);
+    const response = await fetch(apiUrl);
+    if (!response.ok) throw new Error(`Worker error: ${response.status}`);
+    const data = await response.json();
+    setCache(prefix, data);
+    displayDirectory(data, cleanPath);
   } catch (error) {
     console.error("Failed to load directory:", error);
     const errRow = document.createElement("tr");
@@ -178,13 +152,12 @@ function makeCell(className) {
   return td;
 }
 
-function displayDirectory(items, cleanPath, path) {
-  fileListBody.innerHTML = ""; // Clear loading message
+function displayDirectory(data, cleanPath) {
+  fileListBody.innerHTML = "";
 
-  // Parent directory link - only show if we're not at root
   if (cleanPath) {
-    const lastSlashIndex = cleanPath.lastIndexOf("/");
-    const parentPath = lastSlashIndex >= 0 ? cleanPath.substring(0, lastSlashIndex) : "/";
+    const lastSlash = cleanPath.lastIndexOf("/");
+    const parentPath = lastSlash >= 0 ? cleanPath.substring(0, lastSlash) : "";
     const parentRow = document.createElement("tr");
 
     const td1 = makeCell(null);
@@ -192,7 +165,7 @@ function displayDirectory(items, cleanPath, path) {
     icon.setAttribute("data-lucide", "folder");
     icon.className = "file-icon";
     const link = document.createElement("a");
-    link.href = parentPath === "" ? "/" : parentPath + "/";
+    link.href = parentPath ? `/${parentPath}/` : "/";
     link.className = "file-link parent-link";
     link.textContent = "..";
     td1.appendChild(icon);
@@ -206,32 +179,18 @@ function displayDirectory(items, cleanPath, path) {
     fileListBody.appendChild(parentRow);
   }
 
-  // Sort items: directories first, then files, all alphabetically
-  items.sort((a, b) => {
-    if (a.type === b.type) return a.name.localeCompare(b.name);
-    return a.type === "dir" ? -1 : 1;
-  });
-
-  // Filter out unwanted files
-  const ignoredFiles = [".nojekyll", "index.html", "404.html", "CNAME"];
-  items = items.filter(item => !ignoredFiles.includes(item.name) && !item.name.startsWith("."));
-
-  items.forEach((item) => {
-    const isDirectory = item.type === "dir";
-    const itemPath = isDirectory
-      ? `${cleanPath ? cleanPath + "/" : ""}${item.name}/`
-      : item.download_url;
-
+  (data.dirs || []).forEach(dir => {
+    const dirHref = `/${cleanPath ? cleanPath + "/" : ""}${dir}`;
     const row = document.createElement("tr");
 
     const td1 = makeCell(null);
     const icon = document.createElement("i");
-    icon.setAttribute("data-lucide", isDirectory ? "folder" : "file");
+    icon.setAttribute("data-lucide", "folder");
     icon.className = "file-icon";
     const link = document.createElement("a");
-    link.href = itemPath;
+    link.href = dirHref;
     link.className = "file-link";
-    link.textContent = item.name;
+    link.textContent = dir;
     td1.appendChild(icon);
     td1.appendChild(link);
 
@@ -242,6 +201,45 @@ function displayDirectory(items, cleanPath, path) {
     row.appendChild(td3);
     fileListBody.appendChild(row);
   });
+
+  (data.files || []).forEach(file => {
+    const fileUrl = `${WORKER_BASE}/${cleanPath ? cleanPath + "/" : ""}${file.name}`;
+    const row = document.createElement("tr");
+
+    const td1 = makeCell(null);
+    const icon = document.createElement("i");
+    icon.setAttribute("data-lucide", "file");
+    icon.className = "file-icon";
+    const link = document.createElement("a");
+    link.href = fileUrl;
+    link.className = "file-link";
+    link.textContent = file.name;
+    td1.appendChild(icon);
+    td1.appendChild(link);
+
+    const td2 = makeCell("hide-mobile");
+    td2.textContent = file.modified
+      ? new Date(file.modified).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
+      : "-";
+
+    const td3 = makeCell("hide-mobile");
+    td3.textContent = formatFileSize(file.size);
+
+    row.appendChild(td1);
+    row.appendChild(td2);
+    row.appendChild(td3);
+    fileListBody.appendChild(row);
+  });
+
+  if (!data.dirs?.length && !data.files?.length && !cleanPath) {
+    const emptyRow = document.createElement("tr");
+    const td = makeCell(null);
+    td.colSpan = 3;
+    td.className = "loading-message";
+    td.textContent = "Repository is empty.";
+    emptyRow.appendChild(td);
+    fileListBody.appendChild(emptyRow);
+  }
 
   if (window.lucide) lucide.createIcons();
 }

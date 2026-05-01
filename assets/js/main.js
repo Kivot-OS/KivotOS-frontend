@@ -59,43 +59,6 @@ document.addEventListener("click", (e) => {
   });
 });
 
-function fetchAndDisplayStatus() {
-  const uptimeUrl =
-    "https://raw.githubusercontent.com/Kivot-OS/KivotOS-status/master/api/kivot-os-apt-repository/uptime.json";
-  const responseTimeUrl =
-    "https://raw.githubusercontent.com/Kivot-OS/KivotOS-status/master/api/kivot-os-apt-repository/response-time.json";
-
-  const uptimeElement = document.getElementById("uptime-status");
-  const responseTimeElement = document.getElementById("response-time-status");
-
-  fetch(uptimeUrl)
-    .then((response) => response.json())
-    .then((data) => {
-      if (data && data.message) {
-        uptimeElement.textContent = data.message;
-        uptimeElement.style.color = data.color || "var(--text-primary)";
-      }
-    })
-    .catch((error) => {
-      console.error("Error fetching uptime status:", error);
-      uptimeElement.textContent = "N/A";
-    });
-
-  fetch(responseTimeUrl)
-    .then((response) => response.json())
-    .then((data) => {
-      if (data && data.message) {
-        responseTimeElement.textContent = data.message;
-        responseTimeElement.style.color = "var(--ctp-green)";
-      }
-    })
-    .catch((error) => {
-      console.error("Error fetching response time status:", error);
-      responseTimeElement.textContent = "N/A";
-    });
-}
-
-fetchAndDisplayStatus();
 
 // Format time helper
 function formatBuildTime(dateString) {
@@ -128,32 +91,36 @@ function formatBuildTime(dateString) {
   }
 }
 
+function formatDuration(ms) {
+  if (ms <= 0 || ms >= 3600000) return "N/A";
+  const totalSec = Math.floor(ms / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return m > 0 ? `${m}m ${s}s` : `${s}s`;
+}
+
 // Cache management for API rate limiting
 const apiCache = {
   build: { data: null, timestamp: 0 },
-  status: { data: null, timestamp: 0 },
 };
 const CACHE_DURATION = 60000; // 1 minute cache
 
-// Fetch GitHub workflow status with caching
-async function updateBuildStatus() {
-  const buildStatusElement = document.getElementById("build-status");
+// Fetch last 30 build runs and render chart
+async function fetchBuildHistory() {
+  const chartEl = document.getElementById("build-chart");
+  const successRateEl = document.getElementById("build-success-rate");
+  const avgTimeEl = document.getElementById("avg-build-time");
+  const buildStatusEl = document.getElementById("build-status");
 
   const now = Date.now();
-  if (
-    apiCache.build.data &&
-    now - apiCache.build.timestamp < CACHE_DURATION
-  ) {
-    displayBuildStatus(
-      apiCache.build.data,
-      buildStatusElement
-    );
+  if (apiCache.build.data && now - apiCache.build.timestamp < CACHE_DURATION) {
+    renderBuildChart(apiCache.build.data, chartEl, successRateEl, avgTimeEl, buildStatusEl);
     return;
   }
 
   try {
     const response = await fetch(
-      "https://api.github.com/repos/Kivot-OS/KivotOS-repo/actions/workflows/apt-packages.yml/runs?per_page=1",
+      "https://api.github.com/repos/Kivot-OS/KivotOS-repo/actions/workflows/build.yml/runs?per_page=30",
       {
         headers: {
           Accept: "application/vnd.github+json",
@@ -164,22 +131,125 @@ async function updateBuildStatus() {
 
     const remaining = response.headers.get("x-ratelimit-remaining");
     if (remaining && parseInt(remaining) < 10) {
-      console.warn(
-        `GitHub API rate limit low: ${remaining} requests remaining`
-      );
+      console.warn(`GitHub API rate limit low: ${remaining} requests remaining`);
     }
 
-    const data = await response.json();
+    if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
 
+    const data = await response.json();
     apiCache.build.data = data;
     apiCache.build.timestamp = now;
 
-    displayBuildStatus(data, buildStatusElement);
+    renderBuildChart(data, chartEl, successRateEl, avgTimeEl, buildStatusEl);
   } catch (error) {
-    console.error("Error fetching build status:", error);
-    buildStatusElement.textContent = "Unavailable";
-    buildStatusElement.style.color = "var(--text-secondary)";
+    console.error("Error fetching build history:", error);
+    if (chartEl) chartEl.innerHTML = '<div class="loading-message">Failed to load build history</div>';
+    if (successRateEl) successRateEl.textContent = "N/A";
+    if (avgTimeEl) avgTimeEl.textContent = "N/A";
+    if (buildStatusEl) {
+      buildStatusEl.textContent = "Unavailable";
+      buildStatusEl.style.color = "var(--text-secondary)";
+    }
   }
+}
+
+function renderBuildChart(data, chartEl, successRateEl, avgTimeEl, buildStatusEl) {
+  const runs = (data.workflow_runs || []).slice(0, 30);
+
+  if (!runs.length) {
+    if (chartEl) chartEl.innerHTML = '<div class="loading-message">No builds found</div>';
+    return;
+  }
+
+  if (buildStatusEl) displayBuildStatus({ workflow_runs: [runs[0]] }, buildStatusEl);
+
+  const completed = runs.filter(r => r.status === "completed");
+  const successes = completed.filter(r => r.conclusion === "success");
+  const durations = completed
+    .map(r => new Date(r.updated_at) - new Date(r.created_at))
+    .filter(d => d > 0 && d < 3600000);
+
+  if (successRateEl) {
+    const rate = completed.length ? Math.round((successes.length / completed.length) * 100) : null;
+    successRateEl.textContent = rate !== null
+      ? `${rate}% (${successes.length}/${completed.length} runs)`
+      : "N/A";
+    successRateEl.style.color = rate !== null
+      ? (rate >= 80 ? "var(--ctp-green)" : rate >= 50 ? "var(--ctp-yellow)" : "var(--ctp-red)")
+      : "var(--text-secondary)";
+  }
+
+  if (avgTimeEl) {
+    const avgMs = durations.length ? durations.reduce((a, b) => a + b, 0) / durations.length : 0;
+    avgTimeEl.textContent = avgMs > 0 ? formatDuration(avgMs) : "N/A";
+  }
+
+  if (!chartEl) return;
+  chartEl.innerHTML = "";
+
+  const CHART_H = 90;
+  const MIN_H = 6;
+  const maxDur = Math.max(...durations, 1);
+
+  let tipEl = document.getElementById("build-tooltip");
+  if (!tipEl) {
+    tipEl = document.createElement("div");
+    tipEl.id = "build-tooltip";
+    tipEl.className = "build-tooltip";
+    document.body.appendChild(tipEl);
+  }
+
+  [...runs].reverse().forEach(run => {
+    const dur = new Date(run.updated_at) - new Date(run.created_at);
+    const isSuccess = run.conclusion === "success";
+    const isFailure = run.conclusion === "failure";
+    const isRunning = run.status === "in_progress" || run.status === "queued";
+
+    const barH = dur > 0 && dur < 3600000
+      ? Math.max(MIN_H, Math.round((dur / maxDur) * CHART_H))
+      : MIN_H;
+
+    const colorClass = isSuccess ? "success" : isFailure ? "failure"
+      : isRunning ? "running" : "neutral";
+
+    const slot = document.createElement("div");
+    slot.className = "build-bar-slot";
+
+    const bar = document.createElement("div");
+    bar.className = `build-bar build-bar--${colorClass}`;
+    bar.style.height = `${barH}px`;
+
+    const dot = document.createElement("div");
+    dot.className = "build-bar-dot";
+    bar.appendChild(dot);
+    slot.appendChild(bar);
+
+    const conclText = run.conclusion
+      ? run.conclusion.charAt(0).toUpperCase() + run.conclusion.slice(1)
+      : (isRunning ? "Running" : "Queued");
+    const durStr = dur > 0 && dur < 3600000 ? formatDuration(dur) : (isRunning ? "Running…" : "N/A");
+    const dateStr = new Date(run.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+    slot.addEventListener("mouseenter", () => {
+      const barRect = bar.getBoundingClientRect();
+      tipEl.innerHTML = `<strong>#${run.run_number}</strong><br>${conclText}<br>${durStr}<br>${dateStr}`;
+      tipEl.style.display = "block";
+      tipEl.style.opacity = "0";
+      const tipW = tipEl.offsetWidth;
+      const tipH = tipEl.offsetHeight;
+      let left = barRect.left + barRect.width / 2 - tipW / 2;
+      let top = barRect.top - tipH - 8;
+      left = Math.max(8, Math.min(left, window.innerWidth - tipW - 8));
+      tipEl.style.left = `${left}px`;
+      tipEl.style.top = `${Math.max(8, top)}px`;
+      tipEl.style.opacity = "1";
+    });
+
+    slot.addEventListener("mouseleave", () => { tipEl.style.display = "none"; });
+    slot.addEventListener("click", () => window.open(run.html_url, "_blank", "noopener,noreferrer"));
+
+    chartEl.appendChild(slot);
+  });
 }
 
 function displayBuildStatus(data, element) {
@@ -429,5 +499,5 @@ if (yearEl) yearEl.textContent = new Date().getFullYear();
 
 // Initialize
 if (window.lucide) lucide.createIcons();
-updateBuildStatus();
+fetchBuildHistory();
 updatePackageList();
