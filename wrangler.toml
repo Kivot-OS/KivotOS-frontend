@@ -1,0 +1,12 @@
+name = "kivotos-repo"
+main = "src/index.ts"
+compatibility_date = "2026-01-01"
+
+workers_dev = true
+
+[[r2_buckets]]
+binding = "REPO"
+bucket_name = "kivotos-repo"
+
+[observability]
+enabled = true
