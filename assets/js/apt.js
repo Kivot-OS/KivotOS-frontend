@@ -165,7 +165,8 @@ function displayDirectory(data, cleanPath) {
     icon.setAttribute("data-lucide", "folder");
     icon.className = "file-icon";
     const link = document.createElement("a");
-    link.href = parentPath ? `/${parentPath}/` : "/";
+    const parentDirPath = parentPath ? `/${parentPath}/` : "/";
+    link.href = `?path=${parentDirPath}`;
     link.className = "file-link parent-link";
     link.textContent = "..";
     td1.appendChild(icon);
