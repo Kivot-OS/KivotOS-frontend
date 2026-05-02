@@ -212,6 +212,40 @@ export default {
 
     let response: Response;
 
+    if (url.searchParams.get("format") === "json") {
+      const prefix = path.endsWith("/") ? path : path ? path + "/" : "";
+      const listing = await env.REPO.list({
+        prefix,
+        delimiter: "/",
+        limit: 1000,
+      });
+    
+      const dirs = (listing.delimitedPrefixes ?? [])
+        .map(d => d.slice(prefix.length).replace(/\/$/, ""))
+        .filter(Boolean)
+        .sort();
+    
+      const files = (listing.objects ?? [])
+        .filter(obj => {
+          const name = obj.key.slice(prefix.length);
+          return name && !name.includes("/");
+        })
+        .map(obj => ({
+          name: obj.key.slice(prefix.length),
+          size: obj.size,
+          modified: obj.uploaded.toISOString(),
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+    
+      response = new Response(JSON.stringify({ dirs, files }), {
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "public, max-age=60",
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
+    }
+    
     if (path === "" || path.endsWith("/")) {
       const baseUrl = `${url.protocol}//${url.host}`;
       response = await renderIndexWithUrl(env, path, baseUrl);
