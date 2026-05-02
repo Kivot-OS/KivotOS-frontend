@@ -244,9 +244,7 @@ export default {
           "Access-Control-Allow-Origin": "*",
         },
       });
-    }
-    
-    if (path === "" || path.endsWith("/")) {
+    } else if (path === "" || path.endsWith("/")) {
       const baseUrl = `${url.protocol}//${url.host}`;
       response = await renderIndexWithUrl(env, path, baseUrl);
     } else {
