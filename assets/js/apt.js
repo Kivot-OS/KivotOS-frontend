@@ -181,7 +181,7 @@ function displayDirectory(data, cleanPath) {
   }
 
   (data.dirs || []).forEach(dir => {
-    const dirHref = `/${cleanPath ? cleanPath + "/" : ""}${dir}/`;
+    const dirPath = `/${cleanPath ? cleanPath + "/" : ""}${dir}/`;
     const row = document.createElement("tr");
 
     const td1 = makeCell(null);
