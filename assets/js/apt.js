@@ -180,7 +180,7 @@ function displayDirectory(data, cleanPath) {
   }
 
   (data.dirs || []).forEach(dir => {
-    const dirHref = `/${cleanPath ? cleanPath + "/" : ""}${dir}`;
+    const dirHref = `/${cleanPath ? cleanPath + "/" : ""}${dir}/`;
     const row = document.createElement("tr");
 
     const td1 = makeCell(null);
@@ -188,7 +188,7 @@ function displayDirectory(data, cleanPath) {
     icon.setAttribute("data-lucide", "folder");
     icon.className = "file-icon";
     const link = document.createElement("a");
-    link.href = dirHref;
+    link.href = `?path=${dirPath}`;
     link.className = "file-link";
     link.textContent = dir;
     td1.appendChild(icon);
@@ -244,20 +244,18 @@ function displayDirectory(data, cleanPath) {
   if (window.lucide) lucide.createIcons();
 }
 
-// Handle clicks to navigate
 document.addEventListener("click", (e) => {
   const link = e.target.closest(".file-link");
-  if (link) {
-    e.preventDefault();
-    const path = link.getAttribute("href");
-    const isFile = !path.endsWith("/");
+  if (!link) return;
+  e.preventDefault();
+  const href = link.getAttribute("href");
 
-    if (isFile) {
-      window.open(path, "_blank"); // Open download URL directly
-    } else {
-      history.pushState({ path }, "", `?path=${path}`);
-      loadDirectory(path);
-    }
+  if (href.startsWith("?path=")) {
+    const dirPath = new URLSearchParams(href.slice(1)).get("path");
+    history.pushState({ path: dirPath }, "", `?path=${dirPath}`);
+    loadDirectory(dirPath);
+  } else {
+    window.open(href, "_blank");
   }
 });
 
